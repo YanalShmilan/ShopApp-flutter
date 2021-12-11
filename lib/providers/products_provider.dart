@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shop_app/providers/product.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class ProductsProvider with ChangeNotifier {
   List<Product> _items = [
@@ -58,24 +60,82 @@ class ProductsProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  void addProduct(Product product) {
-    final newProduct = Product(
-        id: DateTime.now().toString(),
-        title: product.title,
-        imageUrl: product.imageUrl,
-        price: product.price,
-        description: product.description);
-    _items.insert(0, newProduct);
-    notifyListeners();
+  Future<void> fetchAndSetProducts() async {
+    var url = Uri.parse(
+        'https://shop-app-ff040-default-rtdb.europe-west1.firebasedatabase.app/products.json');
+    try {
+      final response = await http.get(url);
+      if (response.body == "null") {
+        return;
+      }
+
+      final data = json.decode(response.body) as Map<String, dynamic>;
+
+      final List<Product> loadedProducts = [];
+      data.forEach((id, prodData) {
+        loadedProducts.add(Product(
+            id: id,
+            title: prodData['title'],
+            description: prodData['description'],
+            price: prodData['price'],
+            imageUrl: prodData['imageUrl'],
+            isFavorite: prodData['isFavorite']));
+      });
+      _items = loadedProducts;
+      notifyListeners();
+    } catch (e) {
+      throw e;
+    }
   }
 
-  void updateProduct(String id, Product newProduct) {
+  Future<void> addProduct(Product product) async {
+    var url = Uri.parse(
+        'https://shop-app-ff040-default-rtdb.europe-west1.firebasedatabase.app/products.json');
+    try {
+      final response = await http.post(
+        url,
+        body: json.encode(
+          {
+            'title': product.title,
+            'imageUrl': product.imageUrl,
+            'price': product.price,
+            'description': product.description,
+            'isFavorite': product.isFavorite
+          },
+        ),
+      );
+      final newProduct = Product(
+          id: jsonDecode(response.body)['name'],
+          title: product.title,
+          imageUrl: product.imageUrl,
+          price: product.price,
+          description: product.description);
+      _items.insert(0, newProduct);
+      notifyListeners();
+    } catch (e) {
+      throw e;
+    }
+  }
+
+  Future<void> updateProduct(String id, Product newProduct) async {
+    var url = Uri.parse(
+        'https://shop-app-ff040-default-rtdb.europe-west1.firebasedatabase.app/products/$id.json');
+    await http.patch(url,
+        body: json.encode({
+          "title": newProduct.title,
+          "description": newProduct.description,
+          "imageUrl": newProduct.imageUrl,
+          "price": newProduct.price
+        }));
     final index = _items.indexWhere((prod) => prod.id == id);
     _items[index] = newProduct;
     notifyListeners();
   }
 
   void deleteProduct(String id) {
+    var url = Uri.parse(
+        'https://shop-app-ff040-default-rtdb.europe-west1.firebasedatabase.app/products/$id.json');
+    http.delete(url);
     _items.removeWhere((prod) => prod.id == id);
     notifyListeners();
   }
