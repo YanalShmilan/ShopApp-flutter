@@ -18,9 +18,9 @@ class Product with ChangeNotifier {
       required this.imageUrl,
       this.isFavorite = false});
 
-  Future<void> toggleFavStatus() async {
+  Future<void> toggleFavStatus(String token) async {
     var url = Uri.parse(
-        'https://shop-app-ff040-default-rtdb.europe-west1.firebasedatabase.app/products/$id.json');
+        'https://shop-app-ff040-default-rtdb.europe-west1.firebasedatabase.app/products/$id.json?auth=$token');
     await http.patch(url, body: json.encode({"isFavorite": !isFavorite}));
 
     isFavorite = !isFavorite;

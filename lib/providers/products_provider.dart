@@ -60,9 +60,11 @@ class ProductsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  final String authToken;
+  ProductsProvider(this.authToken, this._items);
   Future<void> fetchAndSetProducts() async {
     var url = Uri.parse(
-        'https://shop-app-ff040-default-rtdb.europe-west1.firebasedatabase.app/products.json');
+        'https://shop-app-ff040-default-rtdb.europe-west1.firebasedatabase.app/products.json?auth=$authToken');
     try {
       final response = await http.get(url);
       if (response.body == "null") {
@@ -90,7 +92,7 @@ class ProductsProvider with ChangeNotifier {
 
   Future<void> addProduct(Product product) async {
     var url = Uri.parse(
-        'https://shop-app-ff040-default-rtdb.europe-west1.firebasedatabase.app/products.json');
+        'https://shop-app-ff040-default-rtdb.europe-west1.firebasedatabase.app/products.json?auth=$authToken');
     try {
       final response = await http.post(
         url,
@@ -119,7 +121,7 @@ class ProductsProvider with ChangeNotifier {
 
   Future<void> updateProduct(String id, Product newProduct) async {
     var url = Uri.parse(
-        'https://shop-app-ff040-default-rtdb.europe-west1.firebasedatabase.app/products/$id.json');
+        'https://shop-app-ff040-default-rtdb.europe-west1.firebasedatabase.app/products/$id.json?auth=$authToken');
     await http.patch(url,
         body: json.encode({
           "title": newProduct.title,
@@ -134,7 +136,7 @@ class ProductsProvider with ChangeNotifier {
 
   void deleteProduct(String id) {
     var url = Uri.parse(
-        'https://shop-app-ff040-default-rtdb.europe-west1.firebasedatabase.app/products/$id.json');
+        'https://shop-app-ff040-default-rtdb.europe-west1.firebasedatabase.app/products/$id.json?auth=$authToken');
     http.delete(url);
     _items.removeWhere((prod) => prod.id == id);
     notifyListeners();
