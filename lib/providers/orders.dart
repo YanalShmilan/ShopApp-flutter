@@ -24,10 +24,11 @@ class Orders with ChangeNotifier {
   }
 
   final String token;
-  Orders(this.token, this._orders);
+  final String userId;
+  Orders(this.token, this._orders, this.userId);
   Future<void> fetchAndSetOrders() async {
     var url = Uri.parse(
-        'https://shop-app-ff040-default-rtdb.europe-west1.firebasedatabase.app/orders.json?auth=$token');
+        'https://shop-app-ff040-default-rtdb.europe-west1.firebasedatabase.app/orders/$userId.json?auth=$token');
     try {
       final response = await http.get(url);
       if (response.body == "null") {
@@ -57,7 +58,7 @@ class Orders with ChangeNotifier {
 
   Future<void> addOrder(List<CartItem> cartProducts, double total) async {
     var url = Uri.parse(
-        'https://shop-app-ff040-default-rtdb.europe-west1.firebasedatabase.app/orders.json?auth=$token');
+        'https://shop-app-ff040-default-rtdb.europe-west1.firebasedatabase.app/orders/$userId.json?auth=$token');
     final timeStamp = DateTime.now();
     final response = await http.post(url,
         body: json.encode({

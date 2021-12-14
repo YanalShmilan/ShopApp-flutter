@@ -10,7 +10,6 @@ class UserProductsScreen extends StatelessWidget {
   static const routeName = '/user-products';
   @override
   Widget build(BuildContext context) {
-    final products = Provider.of<ProductsProvider>(context);
     return Scaffold(
       appBar: AppBar(
         title: const Text("Your Products"),
@@ -23,23 +22,29 @@ class UserProductsScreen extends StatelessWidget {
         ],
       ),
       drawer: const AppDrawer(),
-      body: RefreshIndicator(
-        onRefresh: () async =>
-            await Provider.of<ProductsProvider>(context, listen: false)
-                .fetchAndSetProducts(),
-        child: Padding(
-          padding: const EdgeInsets.all(8),
-          child: ListView.builder(
-            itemCount: products.items.length,
-            itemBuilder: (ctx, i) => Column(
-              children: [
-                UserProductItem(
-                  id: products.items[i].id,
-                  title: products.items[i].title,
-                  imageUrl: products.items[i].imageUrl,
+      body: FutureBuilder(
+        future:
+            Provider.of<ProductsProvider>(context).fetchAndSetProducts(true),
+        builder: (ctx, snapshot) => RefreshIndicator(
+          onRefresh: () async =>
+              await Provider.of<ProductsProvider>(context, listen: false)
+                  .fetchAndSetProducts(true),
+          child: Consumer<ProductsProvider>(
+            builder: (context, products, _) => Padding(
+              padding: const EdgeInsets.all(8),
+              child: ListView.builder(
+                itemCount: products.items.length,
+                itemBuilder: (ctx, i) => Column(
+                  children: [
+                    UserProductItem(
+                      id: products.items[i].id,
+                      title: products.items[i].title,
+                      imageUrl: products.items[i].imageUrl,
+                    ),
+                    const Divider()
+                  ],
                 ),
-                const Divider()
-              ],
+              ),
             ),
           ),
         ),

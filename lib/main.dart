@@ -27,14 +27,14 @@ class MyApp extends StatelessWidget {
           create: (context) => Auth(),
         ),
         ChangeNotifierProxyProvider<Auth, ProductsProvider>(
-          update: (context, auth, prevProducts) =>
-              ProductsProvider(auth.token.toString(), prevProducts!.items),
-          create: (context) => ProductsProvider("", []),
+          update: (context, auth, prevProducts) => ProductsProvider(
+              auth.token.toString(), prevProducts!.items, auth.userId),
+          create: (context) => ProductsProvider("", [], ''),
         ),
         ChangeNotifierProxyProvider<Auth, Orders>(
           update: (context, auth, prevOrders) =>
-              Orders(auth.token.toString(), prevOrders!.orders),
-          create: (context) => Orders("", []),
+              Orders(auth.token.toString(), prevOrders!.orders, auth.userId),
+          create: (context) => Orders("", [], ""),
         ),
         ChangeNotifierProvider(
           create: (context) => Cart(),
@@ -46,7 +46,18 @@ class MyApp extends StatelessWidget {
           theme: ThemeData(
               colorScheme: ColorScheme.fromSwatch(primarySwatch: Colors.purple)
                   .copyWith(secondary: Colors.deepOrange)),
-          home: auth.isAuth ? const PrdouctOverViewScreen() : AuthScreen(),
+          home: auth.isAuth
+              ? const PrdouctOverViewScreen()
+              : FutureBuilder(
+                  future: auth.tryLogin(),
+                  builder: (context, authResultSnapshot) =>
+                      authResultSnapshot.connectionState ==
+                              ConnectionState.waiting
+                          ? const Center(
+                              child: CircularProgressIndicator(),
+                            )
+                          : AuthScreen(),
+                ),
           routes: {
             ProductDetailScreen.routeName: (contex) =>
                 const ProductDetailScreen(),

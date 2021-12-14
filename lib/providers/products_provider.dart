@@ -61,18 +61,24 @@ class ProductsProvider with ChangeNotifier {
   }
 
   final String authToken;
-  ProductsProvider(this.authToken, this._items);
-  Future<void> fetchAndSetProducts() async {
+  final String userId;
+  ProductsProvider(this.authToken, this._items, this.userId);
+  Future<void> fetchAndSetProducts([bool filterByUser = false]) async {
+    final filterString =
+        filterByUser ? '&orderBy="userId"&equalTo="$userId"' : "";
     var url = Uri.parse(
-        'https://shop-app-ff040-default-rtdb.europe-west1.firebasedatabase.app/products.json?auth=$authToken');
+        'https://shop-app-ff040-default-rtdb.europe-west1.firebasedatabase.app/products.json?auth=$authToken$filterString');
     try {
       final response = await http.get(url);
       if (response.body == "null") {
         return;
       }
-
       final data = json.decode(response.body) as Map<String, dynamic>;
+      url = Uri.parse(
+          'https://shop-app-ff040-default-rtdb.europe-west1.firebasedatabase.app/userFavorites/$userId.json?auth=$authToken');
 
+      final favoriteResponse = await http.get(url);
+      final favData = json.decode(favoriteResponse.body);
       final List<Product> loadedProducts = [];
       data.forEach((id, prodData) {
         loadedProducts.add(Product(
@@ -81,7 +87,7 @@ class ProductsProvider with ChangeNotifier {
             description: prodData['description'],
             price: prodData['price'],
             imageUrl: prodData['imageUrl'],
-            isFavorite: prodData['isFavorite']));
+            isFavorite: favData == null ? false : favData[id] ?? false));
       });
       _items = loadedProducts;
       notifyListeners();
@@ -102,7 +108,7 @@ class ProductsProvider with ChangeNotifier {
             'imageUrl': product.imageUrl,
             'price': product.price,
             'description': product.description,
-            'isFavorite': product.isFavorite
+            'userId': userId
           },
         ),
       );

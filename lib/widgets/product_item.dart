@@ -37,8 +37,9 @@ class ProdcutItem extends StatelessWidget {
                   : Icons.favorite_border_outlined,
               color: Colors.deepOrange,
             ),
-            onPressed: () => product
-                .toggleFavStatus(Provider.of<Auth>(context).token.toString()),
+            onPressed: () => product.toggleFavStatus(
+                Provider.of<Auth>(context, listen: false).token.toString(),
+                Provider.of<Auth>(context, listen: false).userId),
           ),
           trailing: IconButton(
             icon: const Icon(
